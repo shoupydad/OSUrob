@@ -43,7 +43,7 @@ namespace OSUrob {
 
 		// Main Directory to reach most configure/information files
 
-#define MAINPATH "C:\\Users\\tshoup\\Documents\\Observatory\\"
+#define MAINPATH "C:\\Users\\Public\\Observatory\\"
 
 #define INSTRUMENTSELECTORSETTINGSFILE MAINPATH "OSUrob\\InstrumentSelectorSettings.txt"
 #define MESSAGEFILENAME MAINPATH "OSUrob\\MessageFile.txt"
