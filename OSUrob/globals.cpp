@@ -13,7 +13,7 @@ bool OSUrobFormExists=false;
 bool ProgressDialogExists=false;
 bool YesNoDialogExists=false;
 bool CalibrateISDialogExists=false;
-bool AdjustFocusDialogExists=false;
+bool AdjustTelescopeFocusDialogExists=false;
 bool CalibrateSlewingDialogExists=false;
 bool SpectrographWavelengthsDialogExists=false;
 bool GlobalDebug=false;
@@ -32,4 +32,5 @@ OBSERVATORY Observatory;
 SCOPEINFO ScopeInfo;
 INSTRUMENTSELECTORSETTINGS ISSettings;
 SPECTROGRAPHSETTINGS SpSettings;
+FOCUSERSETTINGS FocuserSettings;
 }

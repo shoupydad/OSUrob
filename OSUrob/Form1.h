@@ -3,10 +3,11 @@
 #include <sys/stat.h>
 #include "doRoutines.h"
 #include "CalibrateISDialog.h"
-#include "AdjustFocusDialog.h"
+//#include "AdjustFocusDialog.h"
 #include "CalibrateSlewingDialog.h"
 #include "SpectrographWavelengthsDialog.h"
 #include "RoboFocuser.h"
+#include "AdjustTelescopeFocusDialog.h"
 
 namespace OSUrob {
 
@@ -63,6 +64,9 @@ namespace OSUrob {
 	private: System::Windows::Forms::CheckBox^  PowerAux2Button;
 	private: System::Windows::Forms::Label^  label22;
 	private: System::Windows::Forms::TextBox^  FWPositionTextBox;
+	private: System::Windows::Forms::ToolStripMenuItem^  focuserToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  configureToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  adjustToolStripMenuItem;
 
 
 
@@ -307,6 +311,9 @@ private: System::ComponentModel::IContainer^  components;
 			this->calibrateScopeSlewingToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->SpectrographWavelengthsToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->turnOnOffGlobalDebuggingToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->focuserToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->configureToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->adjustToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->hToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->aboutToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolStrip1 = (gcnew System::Windows::Forms::ToolStrip());
@@ -421,9 +428,10 @@ private: System::ComponentModel::IContainer^  components;
 			// 
 			// MainMenu
 			// 
-			this->MainMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {
+			this->MainMenu->Items->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(6) {
 				this->helpToolStripMenuItem,
-					this->telescopeToolStripMenuItem, this->guidingToolStripMenuItem, this->settingsToolStripMenuItem, this->hToolStripMenuItem
+					this->telescopeToolStripMenuItem, this->guidingToolStripMenuItem, this->settingsToolStripMenuItem, this->focuserToolStripMenuItem,
+					this->hToolStripMenuItem
 			});
 			this->MainMenu->Location = System::Drawing::Point(0, 0);
 			this->MainMenu->Name = L"MainMenu";
@@ -446,28 +454,28 @@ private: System::ComponentModel::IContainer^  components;
 			// slitOpenToolStripMenuItem
 			// 
 			this->slitOpenToolStripMenuItem->Name = L"slitOpenToolStripMenuItem";
-			this->slitOpenToolStripMenuItem->Size = System::Drawing::Size(144, 22);
+			this->slitOpenToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->slitOpenToolStripMenuItem->Text = L"Open Shutter";
 			this->slitOpenToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::OpenSlitMenuItemClick);
 			// 
 			// slitCloseToolStripMenuItem
 			// 
 			this->slitCloseToolStripMenuItem->Name = L"slitCloseToolStripMenuItem";
-			this->slitCloseToolStripMenuItem->Size = System::Drawing::Size(144, 22);
+			this->slitCloseToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->slitCloseToolStripMenuItem->Text = L"Close Shutter";
 			this->slitCloseToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::CloseSlitMenuItemClick);
 			// 
 			// homeDomeToolStripMenuItem
 			// 
 			this->homeDomeToolStripMenuItem->Name = L"homeDomeToolStripMenuItem";
-			this->homeDomeToolStripMenuItem->Size = System::Drawing::Size(144, 22);
+			this->homeDomeToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->homeDomeToolStripMenuItem->Text = L"Home Dome";
 			this->homeDomeToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::HomeDomeMenuItemClick);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-			this->exitToolStripMenuItem->Size = System::Drawing::Size(144, 22);
+			this->exitToolStripMenuItem->Size = System::Drawing::Size(152, 22);
 			this->exitToolStripMenuItem->Text = L"Exit";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::ExitMenuItemClick);
 			// 
@@ -574,6 +582,30 @@ private: System::ComponentModel::IContainer^  components;
 			this->turnOnOffGlobalDebuggingToolStripMenuItem->Size = System::Drawing::Size(239, 22);
 			this->turnOnOffGlobalDebuggingToolStripMenuItem->Text = L"Turn On/Off Global Debugging";
 			this->turnOnOffGlobalDebuggingToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::turnOnOffGlobalDebuggingToolStripMenuItem_Click);
+			// 
+			// focuserToolStripMenuItem
+			// 
+			this->focuserToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+				this->configureToolStripMenuItem,
+					this->adjustToolStripMenuItem
+			});
+			this->focuserToolStripMenuItem->Name = L"focuserToolStripMenuItem";
+			this->focuserToolStripMenuItem->Size = System::Drawing::Size(60, 20);
+			this->focuserToolStripMenuItem->Text = L"Focuser";
+			// 
+			// configureToolStripMenuItem
+			// 
+			this->configureToolStripMenuItem->Name = L"configureToolStripMenuItem";
+			this->configureToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->configureToolStripMenuItem->Text = L"Configure";
+			this->configureToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::FocuserConfigureToolStripMenuItem_Click);
+			// 
+			// adjustToolStripMenuItem
+			// 
+			this->adjustToolStripMenuItem->Name = L"adjustToolStripMenuItem";
+			this->adjustToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->adjustToolStripMenuItem->Text = L"Adjust";
+			this->adjustToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::FocuserAdjustToolStripMenuItem_Click);
 			// 
 			// hToolStripMenuItem
 			// 
@@ -2195,12 +2227,11 @@ private: System::Void MainTimerTick(System::Object^  sender, System::EventArgs^ 
 		 }
 
 
-
 		 // Public routines
 
 public: static bool CloseObservatory() {
 
-			short dummy=0;
+			short dummy=0, i;
 			float fdummy=0.0;
 			char Message[160];
 //			int answer;
@@ -2222,6 +2253,21 @@ public: static bool CloseObservatory() {
 				fclose(fptr);
 			}
 
+			// Save focuser settings
+
+			fopen_s(&fptr, FOCUSERSETTINGSFILE, "w");
+			if (fptr == NULL) {
+				sprintf_s(Message, sizeof(Message), "Warning can't save focuser settings to file: %s", FOCUSERSETTINGSFILE);
+				MessageBox(Message, OKAY);
+			}
+			else {
+				for (i = 0; i < FocuserSettings.numFocusPositions; i++) {
+					fprintf_s(fptr, "%04d %s\n", FocuserSettings.FocusPositionValues[i], FocuserSettings.FocusPositionNames[i]);
+				}
+				fclose(fptr);
+			}
+
+
 			// close off Robofocus controller software if necessary
 
 			if (RoboFocuserExists) 
@@ -2236,6 +2282,8 @@ public: static bool CloseObservatory() {
 
 			return true;
 		}
+
+
 public: bool UpdateMainWindow() {
 
 	static unsigned short DDWCountToTryAgain = 0;
@@ -2709,10 +2757,10 @@ private: System::Void UnlinkFromScopeMenuItem_Click(System::Object^  sender, Sys
 		 }
 private: System::Void focusToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 
-			 if (! AdjustFocusDialogExists) {
-				 gcnew AdjustFocusDialog();
-			 }
-			 AdjustFocusDialog::FormPtr->ShowDialog();
+//			 if (! AdjustFocusDialogExists) {
+//				 gcnew AdjustFocusDialog();
+//			 }
+//			 AdjustFocusDialog::FormPtr->ShowDialog();
 		 }
 private: System::Void calibrateScopeSlewingToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 
@@ -2769,6 +2817,26 @@ private: System::Void initGPSToolStripMenuItem_Click(System::Object^  sender, Sy
 			 }
 			 return;
 		 }
+
+
+private: System::Void FocuserConfigureToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+
+			// Show dialog to allow user to change Focuser parameters
+
+		}
+
+
+private: System::Void FocuserAdjustToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+
+			// Show dialog to allow user to adjust the focus of the telescope
+			
+			if (!AdjustTelescopeFocusDialogExists) {
+				gcnew AdjustTelescopeFocusDialog();
+				AdjustTelescopeFocusDialogExists = true;
+			}
+			
+			AdjustTelescopeFocusDialog::FormPtr->Show();
+		}
 };
 }
 

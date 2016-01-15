@@ -12,7 +12,7 @@ extern bool OSUrobFormExists;
 extern bool ProgressDialogExists;
 extern bool YesNoDialogExists;
 extern bool CalibrateISDialogExists;
-extern bool AdjustFocusDialogExists;
+extern bool AdjustTelescopeFocusDialogExists;
 extern bool CalibrateSlewingDialogExists;
 extern bool SpectrographWavelengthsDialogExists;
 extern bool GlobalDebug;
@@ -31,5 +31,6 @@ extern OBSERVATORY Observatory;
 extern SCOPEINFO ScopeInfo;
 extern INSTRUMENTSELECTORSETTINGS ISSettings;
 extern SPECTROGRAPHSETTINGS SpSettings;
+extern FOCUSERSETTINGS FocuserSettings;
 
 }

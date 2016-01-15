@@ -19,6 +19,8 @@ namespace OSUrob {
 #define DEG2RAD 0.0174533
 #define RAD2DEG 57.29583
 #define SLEWRATE_BUMP 0.188e-6 // slew rate for bumping scope in arcmin/microsec
+#define MAX_FOCUS_POSITION_NAME_LENGTH 80
+#define MAX_NUM_FOCUS_POSITIONS 16
 
 	// COM port definitions/assignements
 
@@ -50,6 +52,7 @@ namespace OSUrob {
 #define RESPONSEFILENAME MAINPATH "OSUrob\\ResponseFile.txt"
 #define SPECTROGRAPHSETTINGSFILE MAINPATH "OSUrob\\SpectrographSettings.txt"
 #define THESKYSCOPEPOSITIONFILE MAINPATH "OSUrob\\Telescope Position.txt"
+#define FOCUSERSETTINGSFILE MAINPATH "OSUrob\\FocuserSettings.txt"
 
 	// Slewing constants
 
@@ -200,6 +203,17 @@ typedef struct _SPECTROGRAPHSETTINGS {
 	float AngstromsPerPixel;
 	short NumPixels;
 } SPECTROGRAPHSETTINGS;
+
+typedef struct _FOCUSERSETTINGS {
+	bool Installed;
+	int currentPosition;
+	int rawTemperature;
+	double Temperature;
+	char FocusPositionNames[MAX_NUM_FOCUS_POSITIONS][MAX_FOCUS_POSITION_NAME_LENGTH];
+	int FocusPositionValues[MAX_NUM_FOCUS_POSITIONS];
+	int numFocusPositions;
+	unsigned int currentPositionIndex;
+} FOCUSERSETTINGS;
 
 
 }

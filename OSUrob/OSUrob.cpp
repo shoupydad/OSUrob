@@ -109,6 +109,45 @@ int main(array<System::String ^> ^args)
 		fclose(fptr);
 	}
 
+	// Read in Focuser settings
+
+	FocuserSettings.Installed = false;
+	fopen_s(&fptr, FOCUSERSETTINGSFILE, "r");
+	if (fptr == NULL) {
+		FocuserSettings.currentPosition = -9999;
+		FocuserSettings.currentPositionIndex = 0;
+		FocuserSettings.rawTemperature = -9999;
+		FocuserSettings.Temperature = -9999;
+		strcpy_s(FocuserSettings.FocusPositionNames[0], MAX_FOCUS_POSITION_NAME_LENGTH, "40 mm Eyepice");
+		FocuserSettings.FocusPositionValues[0] = 0;
+		strcpy_s(FocuserSettings.FocusPositionNames[1], MAX_FOCUS_POSITION_NAME_LENGTH, "Orion Startshoot Pro");
+		FocuserSettings.FocusPositionValues[1] = 0;
+		strcpy_s(FocuserSettings.FocusPositionNames[2], MAX_FOCUS_POSITION_NAME_LENGTH, "Apogee U8300");
+		FocuserSettings.FocusPositionValues[2] = 0;
+		strcpy_s(FocuserSettings.FocusPositionNames[3], MAX_FOCUS_POSITION_NAME_LENGTH, "LHIRES III");
+		FocuserSettings.FocusPositionValues[3] = 0;
+		FocuserSettings.numFocusPositions = 4;
+	} else {
+		int i = 0;
+		char line[80], *cptr;
+		do {
+			if (fgets(line, sizeof(line), fptr) == nullptr)  // Get line containing position & name, break if eof
+				break;
+			if ((cptr = strchr(line, '\n')) != nullptr)  // remove any newline char
+				*cptr = 0;
+			nItems = sscanf_s(line, "%4d", &FocuserSettings.FocusPositionValues[i]);
+			if (nItems == 1) {
+				strcpy_s(FocuserSettings.FocusPositionNames[i], MAX_FOCUS_POSITION_NAME_LENGTH, &line[5]);
+				i++;
+				if (i >= MAX_NUM_FOCUS_POSITIONS)
+					break;
+			} else
+				break;
+		} while (! feof(fptr));
+		FocuserSettings.numFocusPositions = i;
+		fclose(fptr);
+	}
+
 	Application::ThreadException += gcnew 
       ThreadExceptionEventHandler(OnUnhandled);
 
