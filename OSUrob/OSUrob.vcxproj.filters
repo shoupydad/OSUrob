@@ -134,9 +134,6 @@
     <EmbeddedResource Include="YesNoDialog.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
-    <EmbeddedResource Include="AdjustFocusDialog.resx">
-      <Filter>Resource Files</Filter>
-    </EmbeddedResource>
     <EmbeddedResource Include="CalibrateISDialog.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
@@ -150,6 +147,9 @@
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
     <EmbeddedResource Include="SpectrographWavelengthsDialog.resx">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AdjustTelescopeFocusDialog.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>

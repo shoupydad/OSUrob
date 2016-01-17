@@ -9,6 +9,7 @@
 #include "YesNoDialog.h"
 #include "ProgressDialog.h"
 #include "MoveScopeDialog.h"
+#include "RoboFocuser.h"
 
 using namespace System;
 using namespace System::IO::Ports;

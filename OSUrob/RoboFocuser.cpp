@@ -191,14 +191,14 @@ int RoboFocuser::GetPosition() {
 		return -999;  // if not success, return false;
 
 	if (strncmp(response, "FD", 2) != 0) {
-		sprintf_s(Message, sizeof(Message), "*** Warning - Bad response from RoboFocuser: %s  (RoboFocuser::GetUserButtonState)\n", response);
+		sprintf_s(Message, sizeof(Message), "*** Warning - Bad response from RoboFocuser: %s  (RoboFocuser::GetPosition)\n", response);
 		Form1::StatusPrint(Message);
 		return -999;
 	}
 
 	sscanf_s(response, "FD%d", &position);
 	if ((position < 0) || (position > MAX_ROBOFOCUSER_POSITION)) {
-		sprintf_s(Message, sizeof(Message), "*** Warning - Bad response from RoboFocuser: %s  (RoboFocuser::GetUserButtonState)\n", response);
+		sprintf_s(Message, sizeof(Message), "*** Warning - Bad position from RoboFocuser: %s  (RoboFocuser::GetPosition)\n", response);
 		Form1::StatusPrint(Message);
 		return -999;
 	}
@@ -221,6 +221,7 @@ bool RoboFocuser::GoToPosition(int position) {
 
 	if ((position < MIN_ROBOFOCUSER_POSITION) || (position > MAX_ROBOFOCUSER_POSITION)) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - New position for RoboFocuser is invalid: %d (RoboFocuser::GoToPosition)\n", position);
+		Form1::OSUrobForm->StatusPrint(Message);
 		return false;
 	}
 
@@ -236,8 +237,11 @@ bool RoboFocuser::GoToPosition(int position) {
 
 	this->AddCheckSum(command);
 
-	if (!this->SendCommand(command, response))
-		return false;  // if not success, return false;
+	if (!this->SendCommand(command, response)) {
+		sprintf_s(Message, sizeof(Message), "*** Warning - Failed to send command to RoboFocuser: %s (RoboFocuser::GoToPosition)\n", command);
+		Form1::OSUrobForm->StatusPrint(Message);
+		return false;  // if not success, return false
+	}
 
 	// Check if we are at the correct position
 
@@ -247,6 +251,7 @@ bool RoboFocuser::GoToPosition(int position) {
 
 	if (curPosition != position) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Failed to move to RoboFocuser position: %d (RoboFocuser::GoToPosition)\n", position);
+		Form1::OSUrobForm->StatusPrint(Message);
 		return false;
 	}
 

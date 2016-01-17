@@ -113,31 +113,42 @@ int main(array<System::String ^> ^args)
 
 	FocuserSettings.Installed = false;
 	fopen_s(&fptr, FOCUSERSETTINGSFILE, "r");
+
+	FocuserSettings.currentPositionIndex = 0;
 	if (fptr == NULL) {
+
+		FocuserSettings.TempCalSlope = 1.0;
+		FocuserSettings.TempCalZeroPoint = 0.0;
 		FocuserSettings.currentPosition = -9999;
-		FocuserSettings.currentPositionIndex = 0;
 		FocuserSettings.rawTemperature = -9999;
 		FocuserSettings.Temperature = -9999;
-		strcpy_s(FocuserSettings.FocusPositionNames[0], MAX_FOCUS_POSITION_NAME_LENGTH, "40 mm Eyepice");
+		strcpy_s(FocuserSettings.FocusPositionNames[0], MAX_FOCUS_POSITION_NAME_LENGTH, "Dummy Position");
 		FocuserSettings.FocusPositionValues[0] = 0;
-		strcpy_s(FocuserSettings.FocusPositionNames[1], MAX_FOCUS_POSITION_NAME_LENGTH, "Orion Startshoot Pro");
-		FocuserSettings.FocusPositionValues[1] = 0;
-		strcpy_s(FocuserSettings.FocusPositionNames[2], MAX_FOCUS_POSITION_NAME_LENGTH, "Apogee U8300");
-		FocuserSettings.FocusPositionValues[2] = 0;
-		strcpy_s(FocuserSettings.FocusPositionNames[3], MAX_FOCUS_POSITION_NAME_LENGTH, "LHIRES III");
-		FocuserSettings.FocusPositionValues[3] = 0;
-		FocuserSettings.numFocusPositions = 4;
+		FocuserSettings.FocusPositionTemps[0] = -99.0;
+		FocuserSettings.numFocusPositions = 1;
+
 	} else {
+
 		int i = 0;
 		char line[80], *cptr;
+
+		if (fgets(line, sizeof(line), fptr) == nullptr) {  // Get line containing temperature calibrations
+			FocuserSettings.TempCalSlope = 1.0;
+			FocuserSettings.TempCalZeroPoint = 0.0;
+		}
+		else {
+			sscanf_s(line, "%lf %lf", &FocuserSettings.TempCalSlope, &FocuserSettings.TempCalZeroPoint);
+		}
+
 		do {
 			if (fgets(line, sizeof(line), fptr) == nullptr)  // Get line containing position & name, break if eof
 				break;
 			if ((cptr = strchr(line, '\n')) != nullptr)  // remove any newline char
 				*cptr = 0;
-			nItems = sscanf_s(line, "%4d", &FocuserSettings.FocusPositionValues[i]);
-			if (nItems == 1) {
-				strcpy_s(FocuserSettings.FocusPositionNames[i], MAX_FOCUS_POSITION_NAME_LENGTH, &line[5]);
+			nItems = sscanf_s(line, "%4d %lf", &FocuserSettings.FocusPositionValues[i],
+								&FocuserSettings.FocusPositionTemps[i]);
+			if (nItems == 2) {
+				strcpy_s(FocuserSettings.FocusPositionNames[i], MAX_FOCUS_POSITION_NAME_LENGTH, &line[12]);
 				i++;
 				if (i >= MAX_NUM_FOCUS_POSITIONS)
 					break;

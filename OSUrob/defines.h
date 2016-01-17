@@ -206,11 +206,14 @@ typedef struct _SPECTROGRAPHSETTINGS {
 
 typedef struct _FOCUSERSETTINGS {
 	bool Installed;
+	double TempCalSlope;
+	double TempCalZeroPoint;
 	int currentPosition;
 	int rawTemperature;
 	double Temperature;
 	char FocusPositionNames[MAX_NUM_FOCUS_POSITIONS][MAX_FOCUS_POSITION_NAME_LENGTH];
 	int FocusPositionValues[MAX_NUM_FOCUS_POSITIONS];
+	double FocusPositionTemps[MAX_NUM_FOCUS_POSITIONS];
 	int numFocusPositions;
 	unsigned int currentPositionIndex;
 } FOCUSERSETTINGS;

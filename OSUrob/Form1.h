@@ -3,11 +3,10 @@
 #include <sys/stat.h>
 #include "doRoutines.h"
 #include "CalibrateISDialog.h"
-//#include "AdjustFocusDialog.h"
 #include "CalibrateSlewingDialog.h"
 #include "SpectrographWavelengthsDialog.h"
-#include "RoboFocuser.h"
 #include "AdjustTelescopeFocusDialog.h"
+#include "RoboFocuser.h"
 
 namespace OSUrob {
 
@@ -2261,17 +2260,14 @@ public: static bool CloseObservatory() {
 				MessageBox(Message, OKAY);
 			}
 			else {
+				fprintf_s(fptr, "%lf %lf\n", FocuserSettings.TempCalSlope, FocuserSettings.TempCalZeroPoint);
 				for (i = 0; i < FocuserSettings.numFocusPositions; i++) {
-					fprintf_s(fptr, "%04d %s\n", FocuserSettings.FocusPositionValues[i], FocuserSettings.FocusPositionNames[i]);
+					fprintf_s(fptr, "%04d %06.1f %s\n", FocuserSettings.FocusPositionValues[i],
+							FocuserSettings.FocusPositionTemps[i], FocuserSettings.FocusPositionNames[i]);
 				}
 				fclose(fptr);
 			}
 
-
-			// close off Robofocus controller software if necessary
-
-			if (RoboFocuserExists) 
-				RoboFocuser::Ptr->~RoboFocuser();
 
 			// Close com port to observatory controller
 
