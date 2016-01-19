@@ -532,7 +532,7 @@ bool GetDDWGinfResponse(DDW_INFO *DDWInfo, int timeout) {
 
 	// Parse response into DDW_INFO structure
 
-	nItems = sscanf_s(cptr, "V%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%d,%hu,%hu,%hu,%d,"
+	nItems = sscanf_s(cptr, "V%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%hu,%d,"
 						 "%d,%d,%d,%d,%d,%d,%d,%hu",
 		&DDWInfo->version, &DDWInfo->TicksPerRotation, &DDWInfo->HomePosition,
 		&DDWInfo->CoastDistance, &DDWInfo->CurrentDomeAzimuth,
@@ -541,6 +541,7 @@ bool GetDDWGinfResponse(DDW_INFO *DDWInfo, int timeout) {
 		&DDWInfo->HomePositionCWEdge, &DDWInfo->UserPinStatus,
 		&dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy,
 		&DDWInfo->ScopeAzimuth);
+
 	if (nItems != 21) {
 		sprintf_s(message,"*** Warning - Bad format in DDW GINF response: %s\n",
 				buffer);
