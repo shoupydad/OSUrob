@@ -1528,7 +1528,8 @@ bool ProcessMessages(void) {
 					Form1::StatusPrint("*** Warning - Can't step focuser\n");
 					WriteResponse("*** Warning - Can't step focuser");
 				} else {
-					WriteResponse("Success");
+					sprintf_s(Message, "Success: %d", NewFocusPosition);
+					WriteResponse(Message);
 				}
 			}
 			break;
