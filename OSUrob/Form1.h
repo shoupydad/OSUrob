@@ -2293,6 +2293,7 @@ public: bool UpdateMainWindow() {
 	static int UpdateDomeScopeFreq = 0;
 	FILE *fptr;
 	int rah, ram, decd, decm, azd, azm, altd, altm, nItems;
+	int focuserPos, focuserTemp;
 	short hours, degs, mins, value;
 	float ras, decs, azs, alts, fdummy, secs;
 	struct _stat buf;
@@ -2450,6 +2451,25 @@ public: bool UpdateMainWindow() {
 		Form1::OSUrobForm->PowerSpectroButton->Checked = Observatory.ACPower[ACPOWER_PORT_SPECTRO-1];
 	if (Observatory.ACPower[ACPOWER_PORT_AUX2-1] != Form1::OSUrobForm->PowerAux2Button->Checked)
 		Form1::OSUrobForm->PowerAux2Button->Checked = Observatory.ACPower[ACPOWER_PORT_AUX2-1];
+
+	// Update Focuser position & temperature
+
+	focuserPos = RoboFocuser::Ptr->GetPosition();
+	if (focuserPos < 0) {
+		strcpy_s(buffer, sizeof(buffer), "unk");
+	} else {
+		sprintf_s(buffer, sizeof(buffer), "%d", focuserPos);
+	}
+	Form1::SetFocuserPosTextBox(buffer);
+
+	focuserTemp = RoboFocuser::Ptr->GetTemperature();
+	if (focuserTemp < 0) {
+		strcpy_s(buffer, sizeof(buffer), "unk");
+	}
+	else {
+		sprintf_s(buffer, sizeof(buffer), "%d", focuserTemp);
+	}
+	Form1::SetFocuserTempTextBox(buffer);
 
 	// Update filter wheel position
 
@@ -2690,6 +2710,36 @@ public: static void GetFWTextBox(char *text) {
 		text[i] = 0;
 		delete buffer;
 		}
+public: static void SetFocuserPosTextBox(char *text) {
+		String ^buffer;
+		buffer = gcnew String(text);
+		Form1::OSUrobForm->FocusPosTextBox->Text = buffer;
+		delete buffer;
+}
+public: static void GetFocuserPosTextBox(char *text) {
+		int i;
+		String ^buffer;
+		buffer = gcnew String("");
+		buffer = Form1::OSUrobForm->FocusPosTextBox->Text;
+		for (i = 0; i<buffer->Length; i++) text[i] = (char)buffer[i];
+		text[i] = 0;
+		delete buffer;
+}
+public: static void SetFocuserTempTextBox(char *text) {
+		String ^buffer;
+		buffer = gcnew String(text);
+		Form1::OSUrobForm->FocusTempTextBox->Text = buffer;
+		delete buffer;
+}
+public: static void GetFocuserTempTextBox(char *text) {
+		int i;
+		String ^buffer;
+		buffer = gcnew String("");
+		buffer = Form1::OSUrobForm->FocusTempTextBox->Text;
+		for (i = 0; i<buffer->Length; i++) text[i] = (char)buffer[i];
+		text[i] = 0;
+		delete buffer;
+}
 
 
 public: static void StatusPrint(char *Message) {
