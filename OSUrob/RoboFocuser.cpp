@@ -26,6 +26,7 @@ RoboFocuser::RoboFocuser(void) {
 	this->ComPortPtr = gcnew SerialPort(ComPortName);
 	this->ComPortPtr->Open();
 	this->ComPortOpen = this->ComPortPtr->IsOpen;
+	this->ErrMessageCount = 0;
 
 	if (! this->ComPortOpen) {
 		Form1::StatusPrint("*** Warning - Can't open RoboFocuser COM port (RoboFocuser)\n");
@@ -126,7 +127,10 @@ bool RoboFocuser::SendCommand(char *Command, char *Response) {
 	int TotalBytes, TimeOutCounts;
 
 	if (!this->ComPortOpen) {
-		Form1::StatusPrint("*** Warning - RoboFocuser COM port not open (RoboFocuser::SendCommand)\n");
+		if (this->ErrMessageCount < 10) {
+			Form1::StatusPrint("*** Warning - RoboFocuser COM port not open (RoboFocuser::SendCommand)\n");
+			this->ErrMessageCount++;
+		}
 		return false;
 	}
 

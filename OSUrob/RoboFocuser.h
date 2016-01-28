@@ -18,6 +18,7 @@ namespace OSUrob {
 		SerialPort ^ComPortPtr;
 		bool ComPortOpen;
 		String ^ComPortName;
+		int ErrMessageCount;
 		RoboFocuser(void);
 		~RoboFocuser(void);
 		bool SetUserButtonOnOff(short Button, bool On);  // true -> On
