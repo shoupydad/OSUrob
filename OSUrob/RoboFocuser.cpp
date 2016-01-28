@@ -114,7 +114,7 @@ bool RoboFocuser::GetUserButtonState(short Button) {
 		return false;
 	}
 
-	buttonState = (response[5-Button] == '2');
+	buttonState = (response[3+Button] == '2');
 	return buttonState;
 }
 
