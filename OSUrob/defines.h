@@ -97,9 +97,9 @@ namespace OSUrob {
 
 	// OSUrob Scope Functions
 
-#define SCOPE_INIT			0
-#define SCOPE_CLOSE			1
-#define SCOPE_GPS_INIT		2
+#define SCOPE_INIT_LINK			0
+#define SCOPE_CLOSE_LINK			1
+#define SCOPE_INIT_SCOPE	2
 #define SCOPE_PARK			3
 #define SCOPE_UNPARK		4
 #define SCOPE_MOVE			5
@@ -113,6 +113,8 @@ namespace OSUrob {
 #define SCOPE_JOG_SOUTH    13
 #define SCOPE_JOG_EAST     14
 #define SCOPE_JOG_WEST     15
+#define SCOPE_SET_TIMEDATE 16
+#define SCOPE_GET_DATE     17
 
 	// Observatory Control constants
 

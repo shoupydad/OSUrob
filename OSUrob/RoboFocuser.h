@@ -6,7 +6,7 @@ using namespace System::IO::Ports;
 
 namespace OSUrob {
 
-#define MAX_ROBOFOCUSER_POSITION 100000
+#define MAX_ROBOFOCUSER_POSITION 1200
 #define MIN_ROBOFOCUSER_POSITION 0
 #define MAX_ROBOFOCUSER_TEMPERATURE 999999
 #define MIN_ROBOFOCUSER_TEMPERATURE 0
@@ -19,6 +19,7 @@ namespace OSUrob {
 		bool ComPortOpen;
 		String ^ComPortName;
 		int ErrMessageCount;
+		static bool Busy;
 		RoboFocuser(void);
 		~RoboFocuser(void);
 		bool SetUserButtonOnOff(short Button, bool On);  // true -> On

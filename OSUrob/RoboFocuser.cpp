@@ -16,6 +16,7 @@ RoboFocuser::RoboFocuser(void) {
 	Ptr = this;
 	char Message[160];
 
+	this->Busy = false;
 	if (!CheckIfComPortExists(ROBOFOCUSER_COM_PORT_NAME)) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Serial Port for RoboFocuser: %s does not exist (RoboFocuser::RoboFocuser)\n",
 			ROBOFOCUSER_COM_PORT_NAME);
@@ -53,6 +54,7 @@ bool RoboFocuser::SetUserButtonOnOff(short ButtonNum, bool On) {
 	char command[10] = "FP000000";
 	char response[10], Message[160];
 
+
 	if (!this->ComPortOpen) {
 		Form1::StatusPrint("*** Warning - Com port to focuser not open.\n");
 		return false;
@@ -61,13 +63,15 @@ bool RoboFocuser::SetUserButtonOnOff(short ButtonNum, bool On) {
 	// Get current state of all buttons
 
 	this->AddCheckSum(command);
-	if (!this->SendCommand(command, response))
+	if (!this->SendCommand(command, response)) {
 		return false;
+	}
 
 	// Check valid response
 
-	if (strncmp(response, "FP", 2) != 0)
+	if (strncmp(response, "FP", 2) != 0) {
 		return false;
+	}
 
 	// Change only the user button requested
 
@@ -80,17 +84,20 @@ bool RoboFocuser::SetUserButtonOnOff(short ButtonNum, bool On) {
 
 	strcpy_s(command, sizeof(command), response);
 	this->AddCheckSum(command);
-	if (!this->SendCommand(command, response))
+	if (!this->SendCommand(command, response)) {
 		return false;
+	}
 
 	// Double check that it was set on/off
 
-	if (strncmp(response, "FP", 2) != 0)
+	if (strncmp(response, "FP", 2) != 0) {
 		return false;
+	}
 
 	buttonState = (response[ButtonNum + 3] == '2');
 	if ((On && (!buttonState)) || ((!On) && buttonState)) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Wasn't able to turn On/Off AC Power #%d\n", ButtonNum);
+		Form1::StatusPrint(Message);
 		return false;
 	}
 
@@ -106,8 +113,9 @@ bool RoboFocuser::GetUserButtonState(short Button) {
 
 	this->AddCheckSum(command);
 
-	if (!this->SendCommand(command, response))
+	if (!this->SendCommand(command, response)) {
 		return false;  // if not success, return false;
+	}
 
 	if (strncmp(response, "FP", 2) != 0) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Bad response from RoboFocuser: %s  (RoboFocuser::GetUserButtonState)\n", response);
@@ -125,12 +133,23 @@ bool RoboFocuser::SendCommand(char *Command, char *Response) {
 	String ^buffer;
 	char ch, Message[160];
 	int TotalBytes, TimeOutCounts;
+	bool GotF;
+
+	DontUpdateNow(true);
+
+	while (this->Busy) {
+		usleep(10000, true);
+	}
+
+	Busy = true;
 
 	if (!this->ComPortOpen) {
 		if (this->ErrMessageCount < 10) {
 			Form1::StatusPrint("*** Warning - RoboFocuser COM port not open (RoboFocuser::SendCommand)\n");
 			this->ErrMessageCount++;
 		}
+		Busy = false;
+		DontUpdateNow(false);
 		return false;
 	}
 
@@ -143,20 +162,29 @@ bool RoboFocuser::SendCommand(char *Command, char *Response) {
 
 	buffer = gcnew String(Command);
 	this->ComPortPtr->Write(buffer);
+	delete buffer;
 
 	// Check for any characters waiting
 
 	TotalBytes = 0;
 	Response[0] = '\0';
-	TimeOutCounts = 5000;
+	TimeOutCounts = 3000;
+	GotF = false;
 	do {
 		if (this->ComPortPtr->BytesToRead > 0) {
 			ch = this->ComPortPtr->ReadChar();
-			Response[TotalBytes++] = ch;
-			if (TotalBytes == 8) {
-				Response[TotalBytes] = '\0';
-				break;
+			if (!GotF) {
+				GotF = (ch == 'F');
 			}
+			if (GotF) {
+				Response[TotalBytes++] = ch;
+				if (TotalBytes == 8) {
+					Response[TotalBytes] = '\0';
+					if (this->ComPortPtr->BytesToRead > 0)
+						this->ComPortPtr->ReadChar();      // Get rid of checksum
+					break;
+				}
+			} 
 		} else {
 			usleep(10000, false); // 0.01 sec
 			TimeOutCounts--;
@@ -166,8 +194,13 @@ bool RoboFocuser::SendCommand(char *Command, char *Response) {
 	if (TimeOutCounts <= 0) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Timed Out waiting for RoboFocuser response to command: %s  (RoboFocuser::SendCommand)\n", Command);
 		Form1::StatusPrint(Message);
+		Busy = false;
+		DontUpdateNow(false);
 		return false;
 	}
+
+	DontUpdateNow(false);
+	Busy = false;
 	return true;
 }
 
@@ -191,8 +224,9 @@ int RoboFocuser::GetPosition() {
 
 	this->AddCheckSum(command);
 
-	if (!this->SendCommand(command, response))
+	if (!this->SendCommand(command, response)) {
 		return -999;  // if not success, return false;
+	}
 
 	if (strncmp(response, "FD", 2) != 0) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Bad response from RoboFocuser: %s  (RoboFocuser::GetPosition)\n", response);
@@ -213,13 +247,14 @@ int RoboFocuser::GetPosition() {
 bool RoboFocuser::GoToPosition(int position) {
 
 	int curPosition, delta;
-	char command[10], response[10], Message[160];
+	char command[20], response[20], Message[160];
 
 	// Get current position
 
 	curPosition = this->GetPosition();
-	if (curPosition < 0)
+	if (curPosition < 0) {
 		return false;
+	}
 
 	// Check validity of new position
 
@@ -232,33 +267,42 @@ bool RoboFocuser::GoToPosition(int position) {
 	// Send either FO (move out) or FI (move in) command
 
 	delta = position - curPosition;
-	if (delta == 0)
+	if (delta == 0) {
 		return true;
-	else if (delta > 0)
+	} else if (delta > 0)
 		sprintf_s(command, sizeof(command), "FO%06d", delta);
 	else
 		sprintf_s(command, sizeof(command), "FI%06d", abs(delta));
 
 	this->AddCheckSum(command);
 
+	// Let user know what we are doing
+
+	sprintf_s(Message, sizeof(Message), "*** Info - Moving focus by %d step to position %d (GoToPosition)\n", delta, position);
+	Form1::StatusPrint(Message);
+
 	if (!this->SendCommand(command, response)) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Failed to send command to RoboFocuser: %s (RoboFocuser::GoToPosition)\n", command);
 		Form1::OSUrobForm->StatusPrint(Message);
 		return false;  // if not success, return false
 	}
+	usleep(1000000, true); // pause for a second to let robofocuser catch up?
 
 	// Check if we are at the correct position
 
 	curPosition = this->GetPosition();
-	if (curPosition < 0)
+	if (curPosition < 0) {
 		return false;
+	}
 
 	if (curPosition != position) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Failed to move to RoboFocuser position: %d (RoboFocuser::GoToPosition)\n", position);
 		Form1::OSUrobForm->StatusPrint(Message);
+		
 		return false;
 	}
 
+	
 	return true;
 }
 
@@ -271,12 +315,15 @@ int RoboFocuser::GetTemperature() {
 
 	this->AddCheckSum(command);
 
-	if (!this->SendCommand(command, response))
+	if (!this->SendCommand(command, response)) {
+		
 		return -999;  // if not success, return false;
+	}
 
 	if (strncmp(response, "FT", 2) != 0) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Bad response from RoboFocuser: %s  (RoboFocuser::GetTemperature)\n", response);
 		Form1::StatusPrint(Message);
+		
 		return -999;
 	}
 
@@ -284,9 +331,11 @@ int RoboFocuser::GetTemperature() {
 	if ((rawTemperature < MIN_ROBOFOCUSER_TEMPERATURE) || (rawTemperature > MAX_ROBOFOCUSER_TEMPERATURE)) {
 		sprintf_s(Message, sizeof(Message), "*** Warning - Bad response from RoboFocuser: %s  (RoboFocuser::GetTemperature)\n", response);
 		Form1::StatusPrint(Message);
+		
 		return -999;
 	}
 
+	
 	return rawTemperature;
 
 }

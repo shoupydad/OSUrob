@@ -453,28 +453,28 @@ private: System::ComponentModel::IContainer^  components;
 			// slitOpenToolStripMenuItem
 			// 
 			this->slitOpenToolStripMenuItem->Name = L"slitOpenToolStripMenuItem";
-			this->slitOpenToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->slitOpenToolStripMenuItem->Size = System::Drawing::Size(144, 22);
 			this->slitOpenToolStripMenuItem->Text = L"Open Shutter";
 			this->slitOpenToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::OpenSlitMenuItemClick);
 			// 
 			// slitCloseToolStripMenuItem
 			// 
 			this->slitCloseToolStripMenuItem->Name = L"slitCloseToolStripMenuItem";
-			this->slitCloseToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->slitCloseToolStripMenuItem->Size = System::Drawing::Size(144, 22);
 			this->slitCloseToolStripMenuItem->Text = L"Close Shutter";
 			this->slitCloseToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::CloseSlitMenuItemClick);
 			// 
 			// homeDomeToolStripMenuItem
 			// 
 			this->homeDomeToolStripMenuItem->Name = L"homeDomeToolStripMenuItem";
-			this->homeDomeToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->homeDomeToolStripMenuItem->Size = System::Drawing::Size(144, 22);
 			this->homeDomeToolStripMenuItem->Text = L"Home Dome";
 			this->homeDomeToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::HomeDomeMenuItemClick);
 			// 
 			// exitToolStripMenuItem
 			// 
 			this->exitToolStripMenuItem->Name = L"exitToolStripMenuItem";
-			this->exitToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->exitToolStripMenuItem->Size = System::Drawing::Size(144, 22);
 			this->exitToolStripMenuItem->Text = L"Exit";
 			this->exitToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::ExitMenuItemClick);
 			// 
@@ -535,7 +535,7 @@ private: System::ComponentModel::IContainer^  components;
 			// 
 			this->initGPSToolStripMenuItem->Name = L"initGPSToolStripMenuItem";
 			this->initGPSToolStripMenuItem->Size = System::Drawing::Size(173, 22);
-			this->initGPSToolStripMenuItem->Text = L"Init GPS";
+			this->initGPSToolStripMenuItem->Text = L"Init Scope";
 			this->initGPSToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::initGPSToolStripMenuItem_Click);
 			// 
 			// guidingToolStripMenuItem
@@ -595,14 +595,14 @@ private: System::ComponentModel::IContainer^  components;
 			// configureToolStripMenuItem
 			// 
 			this->configureToolStripMenuItem->Name = L"configureToolStripMenuItem";
-			this->configureToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->configureToolStripMenuItem->Size = System::Drawing::Size(127, 22);
 			this->configureToolStripMenuItem->Text = L"Configure";
 			this->configureToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::FocuserConfigureToolStripMenuItem_Click);
 			// 
 			// adjustToolStripMenuItem
 			// 
 			this->adjustToolStripMenuItem->Name = L"adjustToolStripMenuItem";
-			this->adjustToolStripMenuItem->Size = System::Drawing::Size(152, 22);
+			this->adjustToolStripMenuItem->Size = System::Drawing::Size(127, 22);
 			this->adjustToolStripMenuItem->Text = L"Adjust";
 			this->adjustToolStripMenuItem->Click += gcnew System::EventHandler(this, &Form1::FocuserAdjustToolStripMenuItem_Click);
 			// 
@@ -2237,7 +2237,7 @@ public: static bool CloseObservatory() {
 			FILE *fptr;
 
 			DoDomeFunction(DDW_CLOSE,&dummy,true); // close serial port to DDW
-			DoScopeFunction(SCOPE_CLOSE, &fdummy, &fdummy, true);
+			DoScopeFunction(SCOPE_CLOSE_LINK, &fdummy, &fdummy, true);
 
 			// Save spectrograph settings
 
@@ -2309,6 +2309,7 @@ public: bool UpdateMainWindow() {
 
 	if (UpdateBusy)
 		return false;
+
 	UpdateBusy = true;
 
 	// Create link to digital dome works control
@@ -2764,7 +2765,7 @@ private: System::Void LinkToScopeMenuItem_Click(System::Object^  sender, System:
 			 bool success;
 
 			 DontUpdateNow(true);
-			 success = DoScopeFunction(SCOPE_INIT, &dummy, &dummy, true);
+			 success = DoScopeFunction(SCOPE_INIT_LINK, &dummy, &dummy, true);
 			 DontUpdateNow(false);
 			 if (! success) {
 				 Form1::StatusPrint("*** Warning - Failed in linking to scope.\n");
@@ -2794,7 +2795,7 @@ private: System::Void UnlinkFromScopeMenuItem_Click(System::Object^  sender, Sys
 			 bool success;
 
 			 DontUpdateNow(true);
-			 success = DoScopeFunction(SCOPE_CLOSE, &dummy, &dummy, true);
+			 success = DoScopeFunction(SCOPE_CLOSE_LINK, &dummy, &dummy, true);
 			 DontUpdateNow(false);
 			 if (! success) {
 				 Form1::StatusPrint("*** Warning - Failed in closing link to scope.\n");
@@ -2846,19 +2847,19 @@ private: System::Void initGPSToolStripMenuItem_Click(System::Object^  sender, Sy
 			 int answer, itries;
 			 bool success;
 
-			 answer = MessageBox("Sure you want to initialize GPS on Scope", YESNO);
+			 answer = MessageBox("Sure you want to initialize Scope via date/time?", YESNO);
 			 if (answer == YES) {
 				 itries = 0;
 				 DontUpdateNow(true);
 				 do {
-					success = DoScopeFunction(SCOPE_GPS_INIT, &dummy, &dummy, true);
+					success = DoScopeFunction(SCOPE_INIT_SCOPE, &dummy, &dummy, true);
 					if (success) break;
 					itries++;
 					usleep(1000000, true);
 				 } while (itries < 5);
 				 DontUpdateNow(false);
 				 if (itries >= 5) {
-					 Form1::StatusPrint("*** Warning - Failed in initializing GPS on scope.\n");
+					 Form1::StatusPrint("*** Warning - Failed in initializing scope.\n");
 				 }
 			 }
 			 return;

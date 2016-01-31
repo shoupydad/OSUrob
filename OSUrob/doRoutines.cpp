@@ -1028,7 +1028,7 @@ bool PowerOnScope(void) {
 
 	float val1, val2;
 	int i;
-	//char buffer[160];
+	char buffer[160], Response[80];
 
 	if (!PowerOnOff(ACPOWER_PORT_SCOPE, ACPOWER_ON)) {
 		Form1::StatusPrint("*** Warning - failed turning on scope (PowerOnScope)\n");
@@ -1036,20 +1036,19 @@ bool PowerOnScope(void) {
 	}
 	Form1::StatusPrint("*** Info - Turning on scope, wait for 1-2 minutes to initialize...\n");
 	Form1::StatusPrint("*** Info - I will let you know when its ready...\n");
-	for (i=0; i<70; i++) {
-		//sprintf_s(buffer, sizeof(buffer), "*** Info - Seconds to wait: %d\r", 70-i);
-		// Form1::StatusPrint(buffer);
-		usleep(1000000, true);
+	for (i=0; i<70; i+=5) {
+		sprintf_s(buffer, sizeof(buffer), "*** Info - Seconds to wait: %d\r", 70-i);
+		 Form1::StatusPrint(buffer);
+		 usleep(5000000, true);
 	}
 	Form1::StatusPrint("*** Info - It should be up by now.\n");
 	Form1::StatusPrint("*** Info - Linking to Scope...\n");
 	val1 = val2 = 1.0;
 	DontUpdateNow(true);
-	DoScopeFunction(SCOPE_INIT, &val1, &val2, true);
+	DoScopeFunction(SCOPE_INIT_LINK, &val1, &val2, true);
 	usleep(1000000, true);
-	Form1::StatusPrint("*** Info - Now having scope do GPS fix.\n");
-	usleep(1000000, true);
-	DoScopeFunction(SCOPE_GPS_INIT, &val1, &val2, true);
+//	Form1::StatusPrint("*** Info - Now having scope do GPS fix.\n");
+	DoScopeFunction(SCOPE_INIT_SCOPE, &val1, &val2, true);
 	Form1::StatusPrint("**** Info - Scope should be all ready to go.\n");
 	DontUpdateNow(false);
 
@@ -1074,7 +1073,7 @@ bool PowerOffScope(void) {
 	}
 	if (ScopeInfo.LinkOpen) {
 		DontUpdateNow(true);
-		DoScopeFunction(SCOPE_CLOSE, &nTries, &nTries, state);
+		DoScopeFunction(SCOPE_CLOSE_LINK, &nTries, &nTries, state);
 		DontUpdateNow(false);
 	}
 	PowerOnOff(ACPOWER_PORT_SCOPE, ACPOWER_OFF);
@@ -1092,9 +1091,11 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 	float dec, ra;
 	double delra, deldec;
 	bool success;
-	char Ack[2]={6,0}, Response[80], Message[160], command[10];
+	char Ack[2] = { 6,0 }, Response[80], Message[160], command[30], response[40];
 	int delay;
 	double radouble, decdouble, azdouble, altdouble;
+	tm LocalTime;
+	__time64_t CurrentSeconds;
 
 	if (function == SCOPE_CLEAR_BUSY) {
 		ScopeBusy = false;
@@ -1116,7 +1117,7 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 	success = false;
 	switch (function) {
 
-		case SCOPE_INIT: // Initialize connection to scope
+		case SCOPE_INIT_LINK: // Initialize connection to scope
 			if (ScopeInfo.LinkOpen) {
 				Form1::StatusPrint("*** Warning - Link to scope already open.\n");
 				success = true;
@@ -1132,7 +1133,7 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 			}
 			break;
 
-		case SCOPE_CLOSE: // Close connection to scope
+		case SCOPE_CLOSE_LINK: // Close connection to scope
 			if (! ScopeInfo.LinkOpen) {
 				Form1::StatusPrint("*** Warning - Can't close link to scope, its not open.\n");
 				break;
@@ -1146,21 +1147,27 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 			}
 			break;
 
-		case SCOPE_GPS_INIT:
+		case SCOPE_INIT_SCOPE:
 			if (! ScopeInfo.LinkOpen) {
-				Form1::StatusPrint("*** Warning - Can't init GPS, open link to scope first.\n");
+				Form1::StatusPrint("*** Warning - Can't init scope, open link to it first.\n");
 				break;
 			}
-			Form1::StatusPrint("*** INFO - Not doing init GPS's until know why it doesn't work...\n");
-			success = true;
-			break;
-			Form1::StatusPrint("*** Info - Doing GPS fix should take < 30 secs.  I'll wait...\n");
+			Form1::StatusPrint("*** Info - Initing scope with date/time instead of gps fix...\n");
+			_time64(&CurrentSeconds);
+			_localtime64_s(&LocalTime, &CurrentSeconds);
+			sprintf_s(command, sizeof(command), ":hI%02d%02d%02d%02d%02d%02d#", LocalTime.tm_year - 100, LocalTime.tm_mon + 1, LocalTime.tm_mday,
+				LocalTime.tm_hour, LocalTime.tm_min, LocalTime.tm_sec);
+			Scope_SendCommand(command, response);
 			usleep(1000000, true);
-			Scope_SendCommandBlind(":gT#");
-			usleep(30000000,true);
-			Form1::StatusPrint("*** Info - Should be done.\n");
 			success = true;
 			break;
+//			Form1::StatusPrint("*** Info - Doing GPS fix should take < 30 secs.  I'll wait...\n");
+//			usleep(1000000, true);
+//			Scope_SendCommandBlind(":gT#");
+//			usleep(30000000,true);
+//			Form1::StatusPrint("*** Info - Should be done.\n");
+//			success = true;
+//			break;
 
 		case SCOPE_PARK:
 			if (! ScopeInfo.LinkOpen) {
@@ -1434,7 +1441,7 @@ bool ProcessMessages(void) {
 				// Park the scope
 
 			if (! ScopeInfo.LinkOpen) {
-				success = DoScopeFunction(SCOPE_INIT, &dummy, &dummy, true);
+				success = DoScopeFunction(SCOPE_INIT_LINK, &dummy, &dummy, true);
 				if (! success) {
 					Form1::StatusPrint("*** WARNING - can't link to scope, can't park it.");
 				}
