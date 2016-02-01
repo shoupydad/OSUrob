@@ -63,6 +63,9 @@
     <ClCompile Include="AdjustTelescopeFocusDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LX200Scope.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CalibrateISDialog.h">
@@ -114,6 +117,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AdjustTelescopeFocusDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LX200Scope.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -17,6 +17,7 @@ extern bool CalibrateSlewingDialogExists;
 extern bool SpectrographWavelengthsDialogExists;
 extern bool GlobalDebug;
 extern bool RoboFocuserExists;
+extern bool LX200ScopeExists;
 
 	// Misc. items
 

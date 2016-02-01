@@ -10,6 +10,7 @@
 #include "ProgressDialog.h"
 #include "MoveScopeDialog.h"
 #include "RoboFocuser.h"
+#include "LX200Scope.h"
 
 using namespace System;
 using namespace System::IO::Ports;
@@ -1086,7 +1087,7 @@ bool PowerOffScope(void) {
 
 bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 
-	static bool ScopeBusy=false, First=true;
+	static bool ScopeBusy=false;
 	int ntries;
 	float dec, ra;
 	double delra, deldec;
@@ -1096,6 +1097,11 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 	double radouble, decdouble, azdouble, altdouble;
 	tm LocalTime;
 	__time64_t CurrentSeconds;
+
+	if (!LX200ScopeExists) {
+		gcnew LX200Scope();
+		LX200ScopeExists = true;
+	}
 
 	if (function == SCOPE_CLEAR_BUSY) {
 		ScopeBusy = false;
@@ -1109,46 +1115,39 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 	}
 	ScopeBusy = true;
 
-	if (First) {
-		ScopeInfo.LinkOpen = false;
-		First = false;
-	}
-
 	success = false;
 	switch (function) {
 
 		case SCOPE_INIT_LINK: // Initialize connection to scope
-			if (ScopeInfo.LinkOpen) {
+			if (LX200Scope::Ptr->LinkOpen) {
 				Form1::StatusPrint("*** Warning - Link to scope already open.\n");
 				success = true;
 				break;
 			}
 			Form1::StatusPrint("*** Info - Initializing connection to scope...\n");
-			success = Scope_EstablishLink();
+			success = LX200Scope::Ptr->EstablishLink();
 			if (success) {
 				Form1::StatusPrint("*** Info - Connection established to scope.\n");
-				ScopeInfo.LinkOpen = true;
 			} else {
 				Form1::StatusPrint("*** Warning - Connection to scope failed.\n");
 			}
 			break;
 
 		case SCOPE_CLOSE_LINK: // Close connection to scope
-			if (! ScopeInfo.LinkOpen) {
+			if (! LX200Scope::Ptr->LinkOpen) {
 				Form1::StatusPrint("*** Warning - Can't close link to scope, its not open.\n");
 				break;
 			}
-			success = Scope_UnLink();
+			success = LX200Scope::Ptr->CloseLink();
 			if (success) {
 				Form1::StatusPrint("*** Info - Connection to scope is closed.\n");
-				ScopeInfo.LinkOpen = false;
 			} else {
 				Form1::StatusPrint("*** Warning - Can't close connection to scope.\n");
 			}
 			break;
 
 		case SCOPE_INIT_SCOPE:
-			if (! ScopeInfo.LinkOpen) {
+			if (! LX200Scope::Ptr->LinkOpen) {
 				Form1::StatusPrint("*** Warning - Can't init scope, open link to it first.\n");
 				break;
 			}
@@ -1157,7 +1156,7 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 			_localtime64_s(&LocalTime, &CurrentSeconds);
 			sprintf_s(command, sizeof(command), ":hI%02d%02d%02d%02d%02d%02d#", LocalTime.tm_year - 100, LocalTime.tm_mon + 1, LocalTime.tm_mday,
 				LocalTime.tm_hour, LocalTime.tm_min, LocalTime.tm_sec);
-			Scope_SendCommand(command, response);
+			success = LX200Scope::Ptr->SendCommand(command, response);
 			usleep(1000000, true);
 			success = true;
 			break;

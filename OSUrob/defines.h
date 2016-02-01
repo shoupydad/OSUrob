@@ -26,7 +26,7 @@ namespace OSUrob {
 
 #define ROBOFOCUSER_COM_PORT_NAME "COM2"
 #define DDW_COM_PORT_NAME "COM1"
-#define SCOPE_COM_PORT_NAME "COM6"
+#define LX200_COM_PORT_NAME "COM6"
 #define OBSCON_COM_PORT_NAME "COM5"
 
 	// RoboFocus definitions

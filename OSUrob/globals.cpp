@@ -18,6 +18,7 @@ bool CalibrateSlewingDialogExists=false;
 bool SpectrographWavelengthsDialogExists=false;
 bool GlobalDebug=false;
 bool RoboFocuserExists=false;
+bool LX200ScopeExists = false;
 
 	// Misc. items
 

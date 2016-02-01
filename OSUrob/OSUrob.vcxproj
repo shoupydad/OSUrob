@@ -141,6 +141,7 @@
     <ClCompile Include="CalibrateSlewingDialog.cpp" />
     <ClCompile Include="doRoutines.cpp" />
     <ClCompile Include="globals.cpp" />
+    <ClCompile Include="LX200Scope.cpp" />
     <ClCompile Include="MeadeScope.cpp" />
     <ClCompile Include="MoveScopeDialog.cpp" />
     <ClCompile Include="OkayDialog.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="Form1.h">
       <FileType>CppForm</FileType>
     </ClInclude>
+    <ClInclude Include="LX200Scope.h" />
     <ClInclude Include="MeadeScope.h" />
     <ClInclude Include="MoveScopeDialog.h" />
     <ClInclude Include="OkayDialog.h" />
