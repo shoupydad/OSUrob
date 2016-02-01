@@ -58,5 +58,5 @@ float TransformAz(float Az, float Alt);
 void usleep(int usecs, bool DoEvents);
 void WriteResponse(char *Message);
 void PrintStatus(char *text);
-bool OnOffGuiding(int direction, bool state);
+//bool OnOffGuiding(int direction, bool state);
 }

@@ -29,7 +29,6 @@ extern int MessageBoxAnswer;
 	// Global Structures
 
 extern OBSERVATORY Observatory;
-extern SCOPEINFO ScopeInfo;
 extern INSTRUMENTSELECTORSETTINGS ISSettings;
 extern SPECTROGRAPHSETTINGS SpSettings;
 extern FOCUSERSETTINGS FocuserSettings;

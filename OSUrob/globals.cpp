@@ -30,7 +30,6 @@ int MessageBoxAnswer;
 	// Global Structures
 
 OBSERVATORY Observatory;
-SCOPEINFO ScopeInfo;
 INSTRUMENTSELECTORSETTINGS ISSettings;
 SPECTROGRAPHSETTINGS SpSettings;
 FOCUSERSETTINGS FocuserSettings;

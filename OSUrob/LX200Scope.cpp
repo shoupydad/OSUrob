@@ -26,6 +26,10 @@ namespace OSUrob {
 		this->ComPortPtr = gcnew SerialPort(ComPortName);
 		this->ComPortOpen = this->LinkOpen = false;
 		this->ErrMessageCount = 0;
+		this->RAMaxRate = 2.0;    // deg/sec
+		this->RAMinRate = 0.1;    // deg/sec
+		this->DECMaxRate = 2.0;    // deg/sec
+		this->DECMinRate = 0.1;    // deg/sec
 
 		return;
 
@@ -105,6 +109,130 @@ namespace OSUrob {
 		return true;
 	}
 
+	
+	bool LX200Scope::InitScope() {
+
+		char command[80], response[80];
+		bool success;
+		tm LocalTime;
+		__time64_t CurrentSeconds;
+
+		// Get current date/time
+
+		_time64(&CurrentSeconds);
+		_localtime64_s(&LocalTime, &CurrentSeconds);
+		sprintf_s(command, sizeof(command), ":hI%02d%02d%02d%02d%02d%02d#", LocalTime.tm_year - 100, LocalTime.tm_mon + 1,
+			LocalTime.tm_mday, LocalTime.tm_hour, LocalTime.tm_min, LocalTime.tm_sec);
+		success = this->SendCommand(command, response);
+		if ((!success) || (response[1] != '1')) {
+			Form1::StatusPrint("*** Warning - Failed initializing scope (LX200Scope::InitScope)\n");
+			return false;
+		}
+		this->Initialized = true;
+		this->Parked = false;
+
+		return true;
+
+	}
+
+	bool LX200Scope::ParkScope() {
+
+		bool success;
+		char response[80];
+
+		success = this->SendCommand(":hP#", response);
+		if ((!success) || (response[0] != '1')) {
+			Form1::StatusPrint("*** Warning - Failed in parking scope.  (LX200Scope::ParkScope)");
+			return false;
+		}
+		this->Parked = true;
+		this->Initialized = false;
+
+		return true;
+	}
+
+
+	bool LX200Scope::SlewToCoordinates(double ra, double dec) {
+
+
+		return false;
+	}
+
+
+	bool LX200Scope::JogScope(int direction, double rate, bool Start) {
+
+		if (! Start)
+			rate = 0.0;
+
+		switch (direction) {
+			case NORTH:
+				this->MoveAxis(1, rate);
+				break;
+
+			case SOUTH:
+				this->MoveAxis(1, -rate);
+				break;
+
+			case EAST:
+				this->MoveAxis(0, rate);
+				break;
+
+			case WEST:
+				this->MoveAxis(0, -rate);
+				break;
+		}
+
+		return true;
+	}
+
+
+	bool LX200Scope::MoveAxis(int axis, double rate) {
+
+		char command[80], response[80];
+		bool success;
+		double absRate;
+
+		success = false;
+		absRate = fabs(rate);
+
+		if (axis == 0) {
+			if (absRate == 0.0) {
+				success = this->SendCommand(":Q#", response);
+			} else if ((absRate <= this->RAMaxRate) && (absRate >= this->RAMinRate)) {
+				sprintf_s(command, sizeof(command), ":RA%04.1lf#", absRate);
+				success = this->SendCommand(command, response);
+				if (rate > 0.0)
+					success = this->SendCommand(":Me#", response);
+				else
+				    success = this->SendCommand(":Mw#", response);
+			} else {
+				Form1::StatusPrint("*** Warning - Slew rate is outside RA slew rate range (MoveAxis).\n");
+			}
+
+		} else if (axis == 1) {
+			if (absRate == 0.0) {
+				success = this->SendCommand(":Q#", response);
+			} else if ((absRate <= this->DECMaxRate) && (absRate >= this->DECMinRate)) {
+				sprintf_s(command, sizeof(command), ":RE%04.1lf#", absRate);
+				success = this->SendCommand(command, response);
+				if (rate > 0.0)
+					success = this->SendCommand(":Mn#", response);
+				else
+					success = this->SendCommand(":Ms#", response);
+			} else {
+				Form1::StatusPrint("*** Warning - Slew rate is outside DEC slew rate range (MoveAxis).\n");
+			}
+		}
+		return success;
+	}
+
+
+	bool LX200Scope::BumpScopeArcmin(double delRA, double delDEC) {
+
+		return false;
+	}
+
+
 
 	bool LX200Scope::SendCommand(char *Command, char *Response) {
 
@@ -115,11 +243,11 @@ namespace OSUrob {
 
 		DontUpdateNow(true);
 
-		if (!this->ComPortOpen) {
-			if (this->ErrMessageCount < 10) {
+		if (! this->ComPortPtr->IsOpen) {
+//			if (this->ErrMessageCount < 10) {
 				Form1::StatusPrint("*** Warning - LX200 Scope COM port not open (LX200Scope::SendCommand)\n");
-				this->ErrMessageCount++;
-			}
+//				this->ErrMessageCount++;
+//			}
 			DontUpdateNow(false);
 			return false;
 		}

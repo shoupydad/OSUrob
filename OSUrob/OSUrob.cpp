@@ -57,8 +57,8 @@ int main(array<System::String ^> ^args)
 	Observatory.ShutterOpenCloseTime = 100.0; // seconds
 	strcpy_s(Observatory.FWPositions, sizeof(Observatory.FWPositions), "BVRIGHC");
 
-	ScopeInfo.LastDECMoveWasNorth = true;
-	ScopeInfo.LastRAMoveWasEast = true;
+	LX200Scope::Ptr->LastDECMoveWasNorth = true;
+	LX200Scope::Ptr->LastRAMoveWasEast = true;
 
 	// Read in instrument selector settings
 

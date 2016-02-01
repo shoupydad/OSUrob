@@ -1029,7 +1029,7 @@ bool PowerOnScope(void) {
 
 	float val1, val2;
 	int i;
-	char buffer[160], Response[80];
+	char buffer[160];
 
 	if (!PowerOnOff(ACPOWER_PORT_SCOPE, ACPOWER_ON)) {
 		Form1::StatusPrint("*** Warning - failed turning on scope (PowerOnScope)\n");
@@ -1062,7 +1062,7 @@ bool PowerOffScope(void) {
 	float nTries;
 	bool state=false;
 
-	if (! ScopeInfo.Parked) {
+	if (! LX200Scope::Ptr->Parked) {
 		answer = MessageBox("Has scope been parked?", YESNO);
 		if (answer == CANCEL) {
 			return false;
@@ -1072,7 +1072,7 @@ bool PowerOffScope(void) {
 				return false;
 		}
 	}
-	if (ScopeInfo.LinkOpen) {
+	if (LX200Scope::Ptr->LinkOpen) {
 		DontUpdateNow(true);
 		DoScopeFunction(SCOPE_CLOSE_LINK, &nTries, &nTries, state);
 		DontUpdateNow(false);
@@ -1088,15 +1088,11 @@ bool PowerOffScope(void) {
 bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 
 	static bool ScopeBusy=false;
-	int ntries;
 	float dec, ra;
 	double delra, deldec;
 	bool success;
-	char Ack[2] = { 6,0 }, Response[80], Message[160], command[30], response[40];
+	char Ack[2] = { 6,0 }, Message[160];
 	int delay;
-	double radouble, decdouble, azdouble, altdouble;
-	tm LocalTime;
-	__time64_t CurrentSeconds;
 
 	if (!LX200ScopeExists) {
 		gcnew LX200Scope();
@@ -1152,47 +1148,37 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 				break;
 			}
 			Form1::StatusPrint("*** Info - Initing scope with date/time instead of gps fix...\n");
-			_time64(&CurrentSeconds);
-			_localtime64_s(&LocalTime, &CurrentSeconds);
-			sprintf_s(command, sizeof(command), ":hI%02d%02d%02d%02d%02d%02d#", LocalTime.tm_year - 100, LocalTime.tm_mon + 1, LocalTime.tm_mday,
-				LocalTime.tm_hour, LocalTime.tm_min, LocalTime.tm_sec);
-			success = LX200Scope::Ptr->SendCommand(command, response);
+			success = LX200Scope::Ptr->InitScope();
 			usleep(1000000, true);
 			success = true;
 			break;
-//			Form1::StatusPrint("*** Info - Doing GPS fix should take < 30 secs.  I'll wait...\n");
-//			usleep(1000000, true);
-//			Scope_SendCommandBlind(":gT#");
-//			usleep(30000000,true);
-//			Form1::StatusPrint("*** Info - Should be done.\n");
-//			success = true;
-//			break;
 
 		case SCOPE_PARK:
-			if (! ScopeInfo.LinkOpen) {
+			success = false;
+			if (! LX200Scope::Ptr->LinkOpen) {
 				Form1::StatusPrint("*** Warning - Can't park scope, open link to scope first.\n");
 				break;
 			}
-			success = Scope_Park();
+			success = LX200Scope::Ptr->ParkScope();
 			Form1::StatusPrint("*** Warning - Be sure to wait at least 60 seconds\n"
 							   "              before turning off scope power after parking scope.\n");
 			break;
 
 		case SCOPE_UNPARK:
-			if (! ScopeInfo.LinkOpen) break;
+			Form1::StatusPrint("*** Info - Unpark scope not implemented yet...\n");
 			success = false;
 			break;
 
 		case SCOPE_MOVE:
 			success = false;
-			if (! ScopeInfo.LinkOpen) {
+			if (! LX200Scope::Ptr->LinkOpen) {
 				Form1::StatusPrint("*** Can't move scope to coordinates. Link to scope first...\n");
 				break;
 			}
 			ra = *value1;
 			dec = *value2;
 
-			Scope_SlewToCoordinates(ra, dec, true);
+			success = LX200Scope::Ptr->SlewToCoordinates((double) ra, (double) dec);
 			break;
 
 		case SCOPE_JOG_NORTH:
@@ -1200,32 +1186,31 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 		case SCOPE_JOG_EAST:
 		case SCOPE_JOG_WEST:
 			success = false;
-			if (! ScopeInfo.LinkOpen) {
+			if (! LX200Scope::Ptr->LinkOpen) {
 				Form1::StatusPrint("*** Can't jog scope, link to scope first...\n");
 				break;
 			}
 			if ((*value2 < 0.0) || (*value2 > 60.0)) {
-				sprintf_s(Message, "*** Warning - Scope jog time too big: %f (doScopeFunction)\n", *value2);
+				sprintf_s(Message, "*** Warning - Scope jog time invalid: %f (doScopeFunction)\n", *value2);
 				Form1::StatusPrint(Message);
 				break;
 			}
 			delay = (int) (*value2 * 1000000.0); // convert from secs to microsecs
-			Scope_Jog(function-SCOPE_JOG_NORTH+1, *value1, true);
+			success = LX200Scope::Ptr->JogScope(function-SCOPE_JOG_NORTH+1, *value1, true);
 			usleep(delay, true);
-			Scope_Jog(function-SCOPE_JOG_NORTH+1, *value1, false);
-			success = true;
+			success = LX200Scope::Ptr->JogScope(function-SCOPE_JOG_NORTH+1, *value1, false);
 			break;
 
 		case SCOPE_BUMP:
 			success = false;
-			if (! ScopeInfo.LinkOpen) {
+			if (! LX200Scope::Ptr->LinkOpen) {
 				Form1::StatusPrint("*** Can't bump scope, link to scope first...\n");
 				break;
 			}
 
-			delra = *value1/Math::Cos(ScopeInfo.DEC*DEG2RAD);  // convert to arcminutes
+			delra = *value1/Math::Cos(LX200Scope::Ptr->DEC*DEG2RAD);  // convert to arcminutes
 			deldec = ((float) (*value2));
-			success = Scope_BumpArcMin(delra, deldec);
+			success = LX200Scope::Ptr->BumpScopeArcmin(delra, deldec);
 			if (success) {
 				sprintf_s(Message, sizeof(Message), "*** Info - Bumped scope by %7.2lf, %7.2lf arcmin.\n",
 					delra, deldec);
@@ -1238,63 +1223,17 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 			break;
 
 		case SCOPE_FOCUS:
-			if (! ScopeInfo.LinkOpen) {
-				Form1::StatusPrint("*** Can't step focus, link to scope first...\n");
-				break;
-			}
 			success = false;
-
-			ntries = 0;
-			do {
-				success = SendScopeCommand(":F2#", Response, 20); // Set Focuser speed to 2nd slowest
-				ntries++;
-			} while ((! success) && (ntries < 5));
-			if (! success) {
-				Form1::StatusPrint("*** Warning - Can't set focuser speed (DoScopeFunction)\n");
-				break;
-			}
-			if (*value1 > 0) {
-				strcpy_s(command, sizeof(command), ":F+#");
-			} else {
-				strcpy_s(command, sizeof(command), ":F-#");
-			}
-			delay = ((int) (fabs(*value1)*1000000));
-			ntries = 0;
-			do {
-				success = SendScopeCommand(command, Response, 20); // Start focuser moving
-				ntries++;
-			} while ((! success) || (ntries < 5));
-			if (! success) {
-				Form1::StatusPrint("*** Warning - Can't start focuser (DoScopeFunction)\n");
-				break;
-			}
-			usleep(delay,true);
-			ntries = 0;
-			do {
-				success = SendScopeCommand(":FQ#", Response, 20); // Stop focuser
-				ntries++;
-			} while ((! success) || (ntries < 5));
-			if (! success) {
-				Form1::StatusPrint("*** WARNING! - Can't stop focuser (DoScopeFunction)\n");
-				break;
-			}
+			Form1::StatusPrint("*** Info - Use robofocuser to focus scope.\n");
 			break;
 
 		case SCOPE_GET_POSITION:
-			if (! ScopeInfo.LinkOpen) break;
 			success = false;
-
-			// Get RA & DEC
-
-			success = Scope_GetRADEC(&radouble, &decdouble);
-			ScopeInfo.RA = (float) radouble;
-			ScopeInfo.DEC = (float) decdouble;
-
-			// Get Altitude and Azimuth
-
-			success = Scope_GetAltAz(&altdouble, &azdouble);
-			ScopeInfo.Az = (float) azdouble;
-			ScopeInfo.Alt = (float) altdouble;
+			if (! LX200Scope::Ptr->LinkOpen) {
+				Form1::StatusPrint("*** Can't get scope position, link to scope first...\n");
+				break;
+			}
+			Form1::StatusPrint("*** Warning - getting scope position not implemented yet...\n");
 			break;
 	}
 
@@ -1305,27 +1244,27 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 
 void SyncDomeScope(void) {
 
-	float TransformedAz, DiffAz;
+	double TransformedAz, DiffAz;
 	short targetAz;
-	static float OldRA, OldDEC, DiffRA, DiffDEC;
+	static double OldRA, OldDEC, DiffRA, DiffDEC;
 	static bool First=true;
 
-	if (ScopeInfo.RA < 0.0)  // Scope position unknown
+	if (LX200Scope::Ptr->RA < 0.0)  // Scope position unknown
 		return;
 
 	if (First) {
-		OldRA = ScopeInfo.RA;
-		OldDEC = ScopeInfo.DEC;
+		OldRA = LX200Scope::Ptr->RA;
+		OldDEC = LX200Scope::Ptr->DEC;
 		First = false;
 	}
-	DiffRA = ((float) fabs(ScopeInfo.RA - OldRA));
-	DiffDEC = ((float) fabs(ScopeInfo.DEC - OldDEC));
-	OldRA = ScopeInfo.RA;
-	OldDEC = ScopeInfo.DEC;
-	if ((DiffRA*Math::Cos(ScopeInfo.DEC) > 0.1) || (DiffDEC > 1.5))
+	DiffRA = ((float) fabs(LX200Scope::Ptr->RA - OldRA));
+	DiffDEC = ((float) fabs(LX200Scope::Ptr->DEC - OldDEC));
+	OldRA = LX200Scope::Ptr->RA;
+	OldDEC = LX200Scope::Ptr->DEC;
+	if ((DiffRA*Math::Cos(LX200Scope::Ptr->DEC) > 0.1) || (DiffDEC > 1.5))
 		return;
-	if ((ScopeInfo.Az >= 0.0) && (ScopeInfo.Az <= 360.0)) {
-		TransformedAz = TransformAz(ScopeInfo.Az, ScopeInfo.Alt);
+	if ((LX200Scope::Ptr->Az >= 0.0) && (LX200Scope::Ptr->Az <= 360.0)) {
+		TransformedAz = TransformAz(LX200Scope::Ptr->Az, LX200Scope::Ptr->Alt);
 		DiffAz = ((float) (fabs(((double) Observatory.DomeCurrentAzimuth)-((double) TransformedAz))));
 		if (DiffAz > 5.0) {
 			targetAz = ((short) TransformedAz);
@@ -1382,7 +1321,6 @@ bool ProcessMessages(void) {
 	FILE *fptr;
 	char request[80], command, Message[160], RA[80], DEC[80];
 	char response[80];
-	int DelRATime, DelDECTime, dir;
 	int nItems, FWPosition;
 	int NumSteps, CurrentFocusPosition, NewFocusPosition;
 	double delra, deldec;
@@ -1439,13 +1377,13 @@ bool ProcessMessages(void) {
 			}
 				// Park the scope
 
-			if (! ScopeInfo.LinkOpen) {
+			if (! LX200Scope::Ptr->LinkOpen) {
 				success = DoScopeFunction(SCOPE_INIT_LINK, &dummy, &dummy, true);
 				if (! success) {
 					Form1::StatusPrint("*** WARNING - can't link to scope, can't park it.");
 				}
 			}
-			if (ScopeInfo.LinkOpen) {
+			if (LX200Scope::Ptr->LinkOpen) {
 				success = DoScopeFunction(SCOPE_PARK, &dummy, &dummy, true);
 				if (! success) {
 					Form1::StatusPrint("*** WARNING - can't park scope, will lose alignment.");
@@ -1547,38 +1485,8 @@ bool ProcessMessages(void) {
 			success = true;
 			break;
 		case 'A': // Autoguide scope using autoguider port (via USB1024 DIO)
-			sscanf_s(request, "A %lf %lf", &delra, &deldec); // delra & deldec in arcsec.
-			if ((fabs(delra) > 60.0) || (fabs(deldec) > 60.0)) {
-				sprintf_s(Message, sizeof(Message), "*** Warning - Guiding size too large: (%lf,%lf) (ProcessMessages)\n",
-					delra, deldec);
-				Form1::StatusPrint(Message);
-				WriteResponse(Message);
-			} else {
-				delra = delra*Math::Cos(ScopeInfo.DEC*DEG2RAD);
-				DelRATime = (int) (fabs(delra) / GUIDINGRATE * 1000000);  // in microseconds
-				DelDECTime = (int) (deldec / GUIDINGRATE * 1000000); // in microseconds
-				DontUpdateNow(true);
-				if (delra > 0.0) {
-					dir = EAST;
-				} else {
-					dir = WEST;
-				}
-				OnOffGuiding(dir, ON);
-				usleep(DelRATime, false); // don't do anything but wait.
-				OnOffGuiding(dir, OFF);
-
-				if (deldec < 0.0) {
-					dir = NORTH;
-				} else {
-					dir = SOUTH;
-				}
-				OnOffGuiding(dir, ON);
-				usleep(DelDECTime, false); // don't do anything but wait.
-				OnOffGuiding(dir, OFF);
-				DontUpdateNow(false);
-				WriteResponse("Success");
-				success = true;
-			}
+			Form1::StatusPrint("*** Info - this function as been deleted. Use Starshot autoguider...\n");
+			success = false;
 			break;
 		default:
 			sprintf_s(Message, sizeof(Message), "*** Warning - Invalid request from CCDAuto: %s\n", request);
@@ -1676,65 +1584,6 @@ void ShowMoveScopeDialog(void) {
 		gcnew MoveScopeDialog();
 	}
 	MoveScopeDialog::FormPtr->ShowTheDialog();
-}
-
-
-
-bool OnOffGuiding(int direction, bool On) {
-
-	if ((direction < 1) || (direction > 4))
-		return false;
-	switch (direction) {
-		case 1: // North
-			if (On) {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning ON North guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGNORTHBIT, 0); // ACTIVE LOW
-			} else {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning OFF North guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGNORTHBIT, 1); // ACTIVE LOW
-				ScopeInfo.LastDECMoveWasNorth = true;
-			}
-			break;
-		case 2: // South
-			if (On) {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning ON South guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGSOUTHBIT, 0); // ACTIVE LOW
-			} else {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning OFF South guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGSOUTHBIT, 1); // ACTIVE LOW
-				ScopeInfo.LastDECMoveWasNorth = false;
-			}
-			break;
-		case 3: // East
-			if (On) {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning ON East guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGEASTBIT, 0); // ACTIVE LOW
-			} else {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning OFF East guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGEASTBIT, 1); // ACTIVE LOW
-				ScopeInfo.LastRAMoveWasEast = true;
-			}
-			break;
-		case 4: // West
-			if (On) {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning ON West guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGWESTBIT, 0); // ACTIVE LOW
-			} else {
-				if (GlobalDebug)
-					Form1::StatusPrint("*** Debug - Turning OFF West guide slewing...\n");
-//				cbDBitOut(USB1024BOARD0, FIRSTPORTA, GUIDESLEWINGWESTBIT, 1); // ACTIVE LOW
-				ScopeInfo.LastRAMoveWasEast = false;
-			}
-			break;
-	}
-	return true;
 }
 
 

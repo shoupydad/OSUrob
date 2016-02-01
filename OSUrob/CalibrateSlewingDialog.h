@@ -558,57 +558,58 @@ public: static void GetSlewTimeTextBox(char *text) {
 private: System::Void NButton_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Start slewing at guiding speed.  Stopped by "mouse up" routine
+				
 			 
-			 OnOffGuiding(NORTH, ON);
+//			 OnOffGuiding(NORTH, ON);
 		 }
 
 private: System::Void NButton_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Stop slewing at guiding speed.  Started by "mouse down" routine
 
-			 OnOffGuiding(NORTH, OFF);
+//	OnOffGuiding(NORTH, OFF);
 		 }
 
 private: System::Void SButton_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Start slewing at guiding speed.  Stopped by "mouse up" routine
 			 
-			 OnOffGuiding(SOUTH, ON);
+//	OnOffGuiding(SOUTH, ON);
 		 }
 
 private: System::Void SButton_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Stop slewing at guiding speed.  Started by "mouse down" routine
 
-			 OnOffGuiding(SOUTH, OFF);
+//	OnOffGuiding(SOUTH, OFF);
 		 }
 
 private: System::Void EButton_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Start slewing at guiding speed.  Stopped by "mouse up" routine
 			 
-			 OnOffGuiding(EAST, ON);
+//	OnOffGuiding(EAST, ON);
 		 }
 
 private: System::Void EButton_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Stop slewing at guiding speed.  Started by "mouse down" routine
 
-			 OnOffGuiding(EAST, OFF);
+//	OnOffGuiding(EAST, OFF);
 		 }
 
 private: System::Void WButton_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Start slewing at guiding speed.  Stopped by "mouse up" routine
 			 
-			 OnOffGuiding(WEST, ON);
+//	OnOffGuiding(WEST, ON);
 		 }
 
 private: System::Void WButton_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 
 			 // Stop slewing at guiding speed.  Started by "mouse down" routine
 
-			 OnOffGuiding(WEST, OFF);
+//	OnOffGuiding(WEST, OFF);
 		 }
 };
 }

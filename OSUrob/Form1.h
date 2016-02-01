@@ -7,6 +7,7 @@
 #include "SpectrographWavelengthsDialog.h"
 #include "AdjustTelescopeFocusDialog.h"
 #include "RoboFocuser.h"
+#include "LX200Scope.h"
 
 namespace OSUrob {
 
@@ -2511,11 +2512,11 @@ public: bool UpdateMainWindow() {
 					sprintf_s(Message, sizeof(Message), "*** Warning - Bad format in TheSky scope position: %s\n", buffer);
 					Form1::StatusPrint(Message);
 				} else {
-					ScopeInfo.RA =  ((float) (((float) rah) + ((float) ram)/60.0 + ras/3600.0));
-					ScopeInfo.DEC = ((float) (((float) decd) + ((float) decm)/60.0 + decs/3600.0));
-					ScopeInfo.Az =  ((float) (((float) azd) + ((float) azm)/60.0 + azs/3600.0));
-					ScopeInfo.Alt = ((float) (((float) altd) + ((float) altm)/60.0 + alts/3600.0));
-//					ScopeInfo.Az = 90.0; ScopeInfo.Alt = 45.0;  // ALS - DEBUG
+					LX200Scope::Ptr->RA =  ((float) (((float) rah) + ((float) ram)/60.0 + ras/3600.0));
+					LX200Scope::Ptr->DEC = ((float) (((float) decd) + ((float) decm)/60.0 + decs/3600.0));
+					LX200Scope::Ptr->Az =  ((float) (((float) azd) + ((float) azm)/60.0 + azs/3600.0));
+					LX200Scope::Ptr->Alt = ((float) (((float) altd) + ((float) altm)/60.0 + alts/3600.0));
+//					LX200Scope::Ptr->Az = 90.0; LX200Scope::Ptr->Alt = 45.0;  // ALS - DEBUG
 				}
 				fclose(fptr);
 				success = true;
@@ -2523,34 +2524,34 @@ public: bool UpdateMainWindow() {
 		}
 	}
 	if (! success) {
-		if (ScopeInfo.LinkOpen) {
+		if (LX200Scope::Ptr->LinkOpen) {
 			success = DoScopeFunction(SCOPE_GET_POSITION, &fdummy, &fdummy, true);
 		}
 	}
 
-	if (ScopeInfo.RA > 0.0) {
+	if (LX200Scope::Ptr->RA > 0.0) {
 
-		hours = ((short) ScopeInfo.RA);
-		mins = ((short) ((ScopeInfo.RA - hours)*60.0));
-		secs = ((float) ((ScopeInfo.RA - hours - mins/60.0)*3600.0));
+		hours = ((short) LX200Scope::Ptr->RA);
+		mins = ((short) ((LX200Scope::Ptr->RA - hours)*60.0));
+		secs = ((float) ((LX200Scope::Ptr->RA - hours - mins/60.0)*3600.0));
 		sprintf_s(buffer, sizeof(buffer), "%02d:%02d:%04.1f", hours, mins, secs);
 		Form1::SetRATextBox(buffer);
 
-		degs = ((short) ScopeInfo.DEC);
-		mins = ((short) ((ScopeInfo.DEC - degs)*60.0));
-		secs = ((float) ((ScopeInfo.DEC - degs - mins/60.0)*3600.0));	
+		degs = ((short) LX200Scope::Ptr->DEC);
+		mins = ((short) ((LX200Scope::Ptr->DEC - degs)*60.0));
+		secs = ((float) ((LX200Scope::Ptr->DEC - degs - mins/60.0)*3600.0));	
 		sprintf_s(buffer, sizeof(buffer), "%3d:%02d:%04.1f", degs, abs(mins), fabs(secs));
 		Form1::SetDECTextBox(buffer);
 
-		degs = ((short) ScopeInfo.Az);
-		mins = ((short) ((ScopeInfo.Az - degs)*60.0));
-		secs = ((float) ((ScopeInfo.Az - degs - mins/60.0)*3600.0));	
+		degs = ((short) LX200Scope::Ptr->Az);
+		mins = ((short) ((LX200Scope::Ptr->Az - degs)*60.0));
+		secs = ((float) ((LX200Scope::Ptr->Az - degs - mins/60.0)*3600.0));	
 		sprintf_s(buffer, sizeof(buffer), "%03d:%02d:%04.1f", degs, mins, secs);
 		Form1::SetAzTextBox(buffer);
 
-		degs = ((short) ScopeInfo.Alt);
-		mins = ((short) ((ScopeInfo.Alt - degs)*60.0));
-		secs = ((float) ((ScopeInfo.Alt - degs - mins/60.0)*3600.0));	
+		degs = ((short) LX200Scope::Ptr->Alt);
+		mins = ((short) ((LX200Scope::Ptr->Alt - degs)*60.0));
+		secs = ((float) ((LX200Scope::Ptr->Alt - degs - mins/60.0)*3600.0));	
 		sprintf_s(buffer, sizeof(buffer), "%02d:%02d:%04.1f", degs, abs(mins), fabs(secs));
 		Form1::SetAltTextBox(buffer);
 

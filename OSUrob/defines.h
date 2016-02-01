@@ -120,18 +120,6 @@ namespace OSUrob {
 
 	// Types
 
-typedef struct _SCOPEINFO {
-  bool LinkOpen;
-  bool Parked;
-  bool Initialized;
-  bool LastRAMoveWasEast;
-  bool LastDECMoveWasNorth;
-  float RA;
-  float DEC;
-  float Alt;
-  float Az;
-} SCOPEINFO;
-
 typedef struct _OBSERVATORY {
   int Debug;
   char SiteName[80];
