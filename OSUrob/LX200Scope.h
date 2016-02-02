@@ -19,10 +19,10 @@ namespace OSUrob {
 		bool Initialized;
 		bool LastRAMoveWasEast;
 		bool LastDECMoveWasNorth;
-		double RA;
-		double DEC;
-		double Alt;
-	    double Az;
+		double RA;		// hours
+		double DEC;		// degrees
+		double Alt;		// degrees
+	    double Az;		// degrees
 		double RAMaxRate;    // deg/sec
 		double RAMinRate;    // deg/sec
 		double DECMaxRate;    // deg/sec
@@ -32,13 +32,14 @@ namespace OSUrob {
 		~LX200Scope(void);
 		bool EstablishLink();
 		bool CloseLink();
-		bool SendCommand(char *Command, char *Response);
+		bool SendCommand(char *Command, char *Response, LX200RESPONSETYPES responseType);
 		bool InitScope();
 		bool ParkScope();
 		bool SlewToCoordinates(double ra, double dec);
 		bool JogScope(int direction, double rate, bool start);
 		bool MoveAxis(int whichAxis, double rate);
 		bool BumpScopeArcmin(double delRA, double delDEC);
+		bool GetScopeCoordinates(double *RA, double *DEC, double *Az, double *Alt);
 	};
 
 }

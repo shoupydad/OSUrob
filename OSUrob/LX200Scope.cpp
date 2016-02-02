@@ -80,7 +80,7 @@ namespace OSUrob {
 
 		nTries = 0;
 		do {
-			success = this->SendCommand(":GVN#", Response);
+			success = this->SendCommand(":GVN#", Response, POUND_SIGN_TERMINATED);
 			if (success)
 				break;
 			usleep(1000000, true);  // sleep for a second
@@ -112,8 +112,10 @@ namespace OSUrob {
 	
 	bool LX200Scope::InitScope() {
 
+		float UTCOffset;
 		char command[80], response[80];
 		bool success;
+		tm UTTime;
 		tm LocalTime;
 		__time64_t CurrentSeconds;
 
@@ -121,13 +123,29 @@ namespace OSUrob {
 
 		_time64(&CurrentSeconds);
 		_localtime64_s(&LocalTime, &CurrentSeconds);
+		_gmtime64_s(&UTTime, &CurrentSeconds);
+		UTCOffset = (float) (UTTime.tm_hour - LocalTime.tm_hour);
 		sprintf_s(command, sizeof(command), ":hI%02d%02d%02d%02d%02d%02d#", LocalTime.tm_year - 100, LocalTime.tm_mon + 1,
 			LocalTime.tm_mday, LocalTime.tm_hour, LocalTime.tm_min, LocalTime.tm_sec);
-		success = this->SendCommand(command, response);
-		if ((!success) || (response[1] != '1')) {
+		success = this->SendCommand(command, response, SINGLE_CHAR);
+		if ((!success) || (response[0] != '1')) {
 			Form1::StatusPrint("*** Warning - Failed initializing scope (LX200Scope::InitScope)\n");
 			return false;
 		}
+
+		// Set UTC offset (in hours)
+
+		sprintf_s(command, sizeof(command), ":SG%+4.1f#", UTCOffset);
+		success = this->SendCommand(command, response, SINGLE_CHAR);
+		if ((!success) || (response[0] != '1')) {
+			Form1::StatusPrint("*** Warning - Failed initializing scope (LX200Scope::InitScope)\n");
+			return false;
+		}
+
+		// Turn off Daylight Savings time...
+
+		success = this->SendCommand(":SH0#", response, NO_RESPONSE);
+
 		this->Initialized = true;
 		this->Parked = false;
 
@@ -140,11 +158,8 @@ namespace OSUrob {
 		bool success;
 		char response[80];
 
-		success = this->SendCommand(":hP#", response);
-		if ((!success) || (response[0] != '1')) {
-			Form1::StatusPrint("*** Warning - Failed in parking scope.  (LX200Scope::ParkScope)");
-			return false;
-		}
+		success = this->SendCommand(":hP#", response, NO_RESPONSE);
+
 		this->Parked = true;
 		this->Initialized = false;
 
@@ -197,28 +212,28 @@ namespace OSUrob {
 
 		if (axis == 0) {
 			if (absRate == 0.0) {
-				success = this->SendCommand(":Q#", response);
+				success = this->SendCommand(":Q#", response, NO_RESPONSE);
 			} else if ((absRate <= this->RAMaxRate) && (absRate >= this->RAMinRate)) {
 				sprintf_s(command, sizeof(command), ":RA%04.1lf#", absRate);
-				success = this->SendCommand(command, response);
+				success = this->SendCommand(command, response, NO_RESPONSE);
 				if (rate > 0.0)
-					success = this->SendCommand(":Me#", response);
+					success = this->SendCommand(":Me#", response, NO_RESPONSE);
 				else
-				    success = this->SendCommand(":Mw#", response);
+				    success = this->SendCommand(":Mw#", response, NO_RESPONSE);
 			} else {
 				Form1::StatusPrint("*** Warning - Slew rate is outside RA slew rate range (MoveAxis).\n");
 			}
 
 		} else if (axis == 1) {
 			if (absRate == 0.0) {
-				success = this->SendCommand(":Q#", response);
+				success = this->SendCommand(":Q#", response, NO_RESPONSE);
 			} else if ((absRate <= this->DECMaxRate) && (absRate >= this->DECMinRate)) {
 				sprintf_s(command, sizeof(command), ":RE%04.1lf#", absRate);
-				success = this->SendCommand(command, response);
+				success = this->SendCommand(command, response, NO_RESPONSE);
 				if (rate > 0.0)
-					success = this->SendCommand(":Mn#", response);
+					success = this->SendCommand(":Mn#", response, NO_RESPONSE);
 				else
-					success = this->SendCommand(":Ms#", response);
+					success = this->SendCommand(":Ms#", response, NO_RESPONSE);
 			} else {
 				Form1::StatusPrint("*** Warning - Slew rate is outside DEC slew rate range (MoveAxis).\n");
 			}
@@ -232,9 +247,84 @@ namespace OSUrob {
 		return false;
 	}
 
+	bool LX200Scope::GetScopeCoordinates(double *RA, double *DEC, double *Azimuth, double *Altitude) {
+
+		char response[80], message[160];
+		bool success;
+		int deg, min, sec, hour, nItems;
+
+		// Get scope equatorial coordinates
+
+		success = this->SendCommand(":GA#", response, POUND_SIGN_TERMINATED);
+		if (!success) {
+			Form1::StatusPrint("*** Warning - Can't get scope altitude (LX200Scope::GetScopeCoordinates)\n");
+			return false;
+		}
+		nItems = sscanf_s(response, "%d?%d:%d", &deg, &min, &sec);
+		if (nItems == 3) {
+			*Altitude = fabs((double)deg) + ((double)min) / 60.0 + ((double)sec) / 3600.0;
+			if (deg < 0)
+				*Altitude = - *Altitude;
+			this->Alt = *Altitude;
+		} else {
+			sprintf_s(message, sizeof(message), "*** Warning - Bad response to get scope altitude: %s (GetScopeCoordinates)\n", response);
+			Form1::StatusPrint(message);
+			return false;
+		}
+
+		success = this->SendCommand(":GZ#", response, POUND_SIGN_TERMINATED);
+		if (!success) {
+			Form1::StatusPrint("*** Warning - Can't get scope azimuth (LX200Scope::GetScopeCoordinates)\n");
+			return false;
+		}
+		sscanf_s(response, "%d?%d:%d", &deg, &min, &sec);
+		if (nItems == 3) {
+			*Azimuth = ((double)deg) + ((double)min) / 60.0 + ((double)sec) / 3600.0;
+			this->Az = *Azimuth;
+		} else {
+			sprintf_s(message, sizeof(message), "*** Warning - Bad response to get scope azimuth: %s (GetScopeCoordinates)\n", response);
+			Form1::StatusPrint(message);
+			return false;
+		}
+
+		success = this->SendCommand(":GR#", response, POUND_SIGN_TERMINATED);
+		if (!success) {
+			Form1::StatusPrint("*** Warning - Can't get scope RA (LX200Scope::GetScopeCoordinates)\n");
+			return false;
+		}
+		sscanf_s(response, "%d:%d:%d", &hour, &min, &sec);
+		if (nItems == 3) {
+			*RA = ((double)hour) + ((double)min) / 60.0 + ((double)sec) / 3600.0;
+			this->RA = *RA;
+		} else {
+			sprintf_s(message, sizeof(message), "*** Warning - Bad response to get scope RA: %s (GetScopeCoordinates)\n", response);
+			Form1::StatusPrint(message);
+			return false;
+		}
+
+		success = this->SendCommand(":GD#", response, POUND_SIGN_TERMINATED);
+		if (!success) {
+			Form1::StatusPrint("*** Warning - Can't get scope DEC (LX200Scope::GetScopeCoordinates)\n");
+			return false;
+		}
+		sscanf_s(response, "%d?%d:%d", &deg, &min, &sec);
+		if (nItems == 3) {
+			*DEC = fabs((double)deg) + ((double)min) / 60.0 + ((double)sec) / 3600.0;
+			if (deg < 0)
+				*DEC = - *DEC;
+			this->DEC = *DEC;
+		} else {
+			sprintf_s(message, sizeof(message), "*** Warning - Bad response to get scope DEC: %s (GetScopeCoordinates)\n", response);
+			Form1::StatusPrint(message);
+			return false;
+		}
+
+		return true;
+	}
 
 
-	bool LX200Scope::SendCommand(char *Command, char *Response) {
+
+	bool LX200Scope::SendCommand(char *Command, char *Response, LX200RESPONSETYPES responseType) {
 
 		String ^buffer;
 		char ch, Message[160];
@@ -263,6 +353,11 @@ namespace OSUrob {
 		this->ComPortPtr->Write(buffer);
 		delete buffer;
 
+		// Check if response needed
+
+		if (responseType == NO_RESPONSE)
+			return true;
+
 		// Check for any characters waiting
 
 		TotalBytes = 0;
@@ -273,6 +368,8 @@ namespace OSUrob {
 			if (this->ComPortPtr->BytesToRead > 0) {
 				ch = this->ComPortPtr->ReadChar();
 				Response[TotalBytes++] = ch;
+				if (responseType == SINGLE_CHAR)
+					return true;
 				if (ch == '#') {
 					Response[TotalBytes] = '\0';
 					break;

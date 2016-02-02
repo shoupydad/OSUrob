@@ -116,6 +116,12 @@ namespace OSUrob {
 #define SCOPE_SET_TIMEDATE 16
 #define SCOPE_GET_DATE     17
 
+enum LX200RESPONSETYPES {
+	NO_RESPONSE,
+	SINGLE_CHAR,
+	POUND_SIGN_TERMINATED
+};
+
 	// Observatory Control constants
 
 	// Types

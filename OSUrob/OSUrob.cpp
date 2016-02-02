@@ -57,6 +57,10 @@ int main(array<System::String ^> ^args)
 	Observatory.ShutterOpenCloseTime = 100.0; // seconds
 	strcpy_s(Observatory.FWPositions, sizeof(Observatory.FWPositions), "BVRIGHC");
 
+	if (!LX200ScopeExists) {
+		gcnew LX200Scope();
+		LX200ScopeExists = true;
+	}
 	LX200Scope::Ptr->LastDECMoveWasNorth = true;
 	LX200Scope::Ptr->LastRAMoveWasEast = true;
 

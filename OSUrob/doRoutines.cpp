@@ -1088,7 +1088,7 @@ bool PowerOffScope(void) {
 bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 
 	static bool ScopeBusy=false;
-	float dec, ra;
+	double DEC, RA, Az, Alt;
 	double delra, deldec;
 	bool success;
 	char Ack[2] = { 6,0 }, Message[160];
@@ -1175,10 +1175,10 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 				Form1::StatusPrint("*** Can't move scope to coordinates. Link to scope first...\n");
 				break;
 			}
-			ra = *value1;
-			dec = *value2;
+			RA = *value1;
+			DEC = *value2;
 
-			success = LX200Scope::Ptr->SlewToCoordinates((double) ra, (double) dec);
+			success = LX200Scope::Ptr->SlewToCoordinates(RA, DEC);
 			break;
 
 		case SCOPE_JOG_NORTH:
@@ -1233,7 +1233,15 @@ bool DoScopeFunction(short function, float *value1, float *value2, bool state) {
 				Form1::StatusPrint("*** Can't get scope position, link to scope first...\n");
 				break;
 			}
-			Form1::StatusPrint("*** Warning - getting scope position not implemented yet...\n");
+			success = LX200Scope::Ptr->GetScopeCoordinates(&RA, &DEC, &Az, &Alt);
+			if (success) {
+				*value1 = (float)RA;
+				*value2 = (float)DEC;
+			}
+			else {
+				*value1 = -999;
+				*value2 = -999;
+			}
 			break;
 	}
 

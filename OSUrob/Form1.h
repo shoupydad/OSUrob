@@ -1763,6 +1763,8 @@ private: System::Void ExitMenuItemClick(System::Object^  sender, System::EventAr
 			 answer = MessageBox("Sure you want to exit OSUrob?", YESNO);
 			 if ((answer == CANCEL) || (answer == NO))
 				 return;
+			 DontUpdateNow(true);
+			 usleep(1000000, true);
 			 ExitMenuItemClicked = true;
 			 if (CloseObservatory()) {
 				 Application::Exit();
@@ -2766,11 +2768,13 @@ private: System::Void LinkToScopeMenuItem_Click(System::Object^  sender, System:
 			 bool success;
 
 			 DontUpdateNow(true);
+			 usleep(1000000, true);
 			 success = DoScopeFunction(SCOPE_INIT_LINK, &dummy, &dummy, true);
 			 DontUpdateNow(false);
 			 if (! success) {
 				 Form1::StatusPrint("*** Warning - Failed in linking to scope.\n");
 			 }
+			 DontUpdateNow(false);
 			 return;
 		 }
 private: System::Void ParkScopeMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -2779,6 +2783,8 @@ private: System::Void ParkScopeMenuItem_Click(System::Object^  sender, System::E
 			 int answer;
 			 bool success;
 
+			 DontUpdateNow(true);
+			 usleep(10000000, true);
 			 answer = MessageBox("Sure you want to park scope", YESNO);
 			 if (answer == YES) {
 				 DontUpdateNow(true);
@@ -2788,6 +2794,7 @@ private: System::Void ParkScopeMenuItem_Click(System::Object^  sender, System::E
 					 Form1::StatusPrint("*** Warning - Failed in parking scope.\n");
 				 }
 			 }
+			 DontUpdateNow(false);
 			 return;
 		 }
 private: System::Void UnlinkFromScopeMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -2796,11 +2803,13 @@ private: System::Void UnlinkFromScopeMenuItem_Click(System::Object^  sender, Sys
 			 bool success;
 
 			 DontUpdateNow(true);
+			 usleep(1000000, true);
 			 success = DoScopeFunction(SCOPE_CLOSE_LINK, &dummy, &dummy, true);
 			 DontUpdateNow(false);
 			 if (! success) {
 				 Form1::StatusPrint("*** Warning - Failed in closing link to scope.\n");
 			 }
+			 DontUpdateNow(false);
 			 return;
 		 }
 private: System::Void focusToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
